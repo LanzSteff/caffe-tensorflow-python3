@@ -48,7 +48,10 @@ class TensorFlowNode(object):
 
     def pair(self, key, value):
         '''Returns key=formatted(value).'''
-        return '%s=%s' % (key, self.format(value))
+        if key is 'padding' or key is 'relu':
+            return '%s=%s' % (key, self.format(value))
+        else:
+            return '%s=\'%s\'' % (key, self.format(value))
 
     def emit(self):
         '''Emits the Python source for this node.'''
