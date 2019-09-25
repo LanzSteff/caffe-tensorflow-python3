@@ -26,7 +26,7 @@ def validate_arguments(args):
         fatal_error('No output path specified.')
 
 
-def convert(def_path, caffemodel_path, data_output_path, code_output_path, standalone_output_path, phase):
+def convert(def_path, caffemodel_path, data_output_path, code_output_path, standalone_output_path, tflite_output_path, phase):
     try:
         sess = tf.InteractiveSession()
         transformer = TensorFlowTransformer(def_path, caffemodel_path, phase=phase)
@@ -102,6 +102,15 @@ def convert(def_path, caffemodel_path, data_output_path, code_output_path, stand
                          filename_tensor_name, output_graph_path,
                          clear_devices, '')
 
+            if tflite_output_path:
+                print_stderr('Generating tflite model...')
+                graph_def_file = standalone_output_path
+                converter = tf.lite.TFLiteConverter.from_frozen_graph(
+                    graph_def_file, [input_node], [output_node])
+                tflite_model = converter.convert()
+                print_stderr('Saving tflite model...')
+                open(tflite_output_path, "wb").write(tflite_model)
+
             shutil.rmtree(temp_folder)
 
         print_stderr('Done.')
@@ -116,6 +125,7 @@ def main():
     parser.add_argument('--data-output-path', help='Converted data output path')
     parser.add_argument('--code-output-path', help='Save generated source to this path')
     parser.add_argument('--standalone-output-path', help='Save generated standalone tensorflow model to this path')
+    parser.add_argument('--tflite-output-path', help='Save generated tflite model to this path')
     parser.add_argument('-p',
                         '--phase',
                         default='test',
@@ -123,7 +133,7 @@ def main():
     args = parser.parse_args()
     validate_arguments(args)
     convert(args.def_path, args.caffemodel, args.data_output_path, args.code_output_path,
-            args.standalone_output_path, args.phase)
+            args.standalone_output_path, args.tflite_output_path, args.phase)
 
 
 if __name__ == '__main__':
